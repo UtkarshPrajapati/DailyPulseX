@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business News Headlines</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Top Business News Headlines</h1>
+        <p>Stay updated with the latest business news from the US.</p>
+    </header>
+    <main>
+        {% if articles %}
+            <div class="articles-container">
+                {% for article in articles %}
+                    <div class="article" id="article-{{ loop.index }}">
+                        {% if article.urlToImage %}
+                            <img src="{{ article.urlToImage }}" alt="{{ article.title }}" class="article-image">
+                        {% else %}
+                            <div class="no-image">No Image Available</div>
+                        {% endif %}
+                        <h2>{{ article.title }}</h2>
+                        <p><strong>Source:</strong> {{ article.source.name }}</p>
+                        <p><strong>Published:</strong> {{ article.publishedAt }}</p>
+                        <button class="describe-btn" data-title="{{ article.title }}" data-id="{{ loop.index }}">Describe</button>
+                        <div class="description" id="desc-{{ loop.index }}"></div>
+                        <a href="{{ article.url }}" target="_blank" class="read-more">Read Full Article</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-articles">No articles found at this time. Please try again later.</p>
+        {% endif %}
+    </main>
+    <footer>
+        <p>&copy; 2025 Business News App. Powered by NewsAPI and Gemini API.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = document.querySelectorAll('.describe-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const title = this.getAttribute('data-title');
+                    const id = this.getAttribute('data-id');
+                    const descDiv = document.getElementById(`desc-${id}`);
+                    
+                    // Show loading state
+                    descDiv.textContent = 'Loading description...';
+                    this.disabled = true;
+
+                    try {
+                        const response = await fetch('/describe', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ title: title })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        descDiv.textContent = data.desc || 'No description available';
+                    } catch (error) {
+                        descDiv.textContent = `Error: ${error.message}`;
+                    } finally {
+                        this.disabled = false;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
