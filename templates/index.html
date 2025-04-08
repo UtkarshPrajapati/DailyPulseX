@@ -4,15 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DailyPulseX - Breaking News</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -38,39 +34,52 @@
         </div>
     </header>
 
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="?category=all">All</a></li>
-                    <li class="nav-item"><a class="nav-link" href="?category=politics">Politics</a></li>
-                    <li class="nav-item"><a class="nav-link" href="?category=sports">Sports</a></li>
-                    <li class="nav-item"><a class="nav-link" href="?category=business">Business</a></li>
-                    <li class="nav-item"><a class="nav-link" href="?category=technology">Technology</a></li>
-                    <li class="nav-item"><a class="nav-link" href="?category=entertainment">Entertainment</a></li>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Category: {% if current_category and current_category != 'all' %}{{ dict(categories).get(current_category, 'All') }}{% else %}All{% endif %}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
+                            {% for cat_id, cat_name in categories %}
+                                <li><a class="dropdown-item" href="/?category={{ cat_id }}{% if current_country %}&country={{ current_country }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">{{ cat_name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="countryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Country: {% if current_country %}{{ dict(countries).get(current_country, 'All') }}{% else %}All{% endif %}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="countryDropdown">
+                            {% for country_code, country_name in countries %}
+                                <li><a class="dropdown-item" href="/?country={{ country_code }}{% if current_category and current_category != 'all' %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">{{ country_name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                 </ul>
                 <form class="d-flex search-form" method="get" action="/">
-                    <input type="text" class="form-control" name="text" placeholder="Search..." value="{{ text }}">
+                    <input type="text" class="form-control me-2" name="q" placeholder="Search..." value="{{ search_query }}">
+                    <input type="hidden" name="category" value="{{ current_category }}">
+                    <input type="hidden" name="country" value="{{ current_country }}">
                     <button class="btn btn-search" type="submit"><i class="fas fa-search"></i></button>
                 </form>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="container mt-4">
-        <!-- Featured Carousel -->
         <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
                 {% for article in articles[:3] %}
                     <div class="carousel-item {% if loop.first %}active{% endif %}">
                         <div class="featured-card">
-                            {% if article.image %}
-                                <img src="{{ article.image }}" class="d-block w-100" alt="{{ article.title }}" loading="lazy">
+                            {% if article.image_url %}
+                                <img src="{{ article.image_url }}" class="d-block w-100" alt="{{ article.title }}" loading="lazy">
                             {% else %}
                                 <div class="no-image">No Image Available</div>
                             {% endif %}
@@ -78,7 +87,7 @@
                                 <h3>{{ article.title }}</h3>
                                 <button class="btn btn-describe" data-title="{{ article.title }}" data-id="desc-{{ loop.index }}"><i class="fas fa-info-circle"></i> Describe</button>
                                 <div class="description" id="desc-{{ loop.index }}"></div>
-                                <a href="{{ article.url }}" target="_blank" class="btn btn-read">Read More</a>
+                                <a href="{{ article.link }}" target="_blank" class="btn btn-read">Read More</a>
                             </div>
                         </div>
                     </div>
@@ -94,24 +103,23 @@
             </button>
         </div>
 
-        <!-- Articles Grid -->
         <div class="row mt-4 articles-grid">
             {% if articles %}
                 {% for article in articles[3:] %}
                     <div class="col-md-4 col-sm-6 mb-4">
                         <div class="article-card">
-                            {% if article.image %}
-                                <img src="{{ article.image }}" class="card-img-top" alt="{{ article.title }}" loading="lazy">
+                            {% if article.image_url %}
+                                <img src="{{ article.image_url }}" class="card-img-top" alt="{{ article.title }}" loading="lazy">
                             {% else %}
                                 <div class="no-image">No Image Available</div>
                             {% endif %}
                             <div class="card-body">
-                                <span class="category-tag">{{ article.category or 'General' }}</span>
+                                <span class="category-tag">{{ article.category[0] if article.category else 'General' }}</span>
                                 <h5>{{ article.title }}</h5>
-                                <p class="meta"><i class="fas fa-clock"></i> {{ article.publish_date }}</p>
+                                <p class="meta"><i class="fas fa-clock"></i> {{ article.pubDate.split(' ')[0] }} - <i class="fas fa-newspaper"></i> {{ article.source_name }}</p>
                                 <button class="btn btn-describe" data-title="{{ article.title }}" data-id="desc-{{ loop.index }}"><i class="fas fa-info-circle"></i> Describe</button>
                                 <div class="description" id="desc-{{ loop.index }}"></div>
-                                <a href="{{ article.url }}" target="_blank" class="btn btn-read">Read More</a>
+                                <a href="{{ article.link }}" target="_blank" class="btn btn-read">Read More</a>
                                 <button class="btn btn-save" data-title="{{ article.title }}"><i class="fas fa-heart"></i></button>
                             </div>
                         </div>
@@ -123,7 +131,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="row">
@@ -146,13 +153,11 @@
                     <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
                 </div>
             </div>
-            <p class="text-center mt-3">© 2025 NewsPulse. Powered by Mediastack API and Gemini API.</p>
+            <p class="text-center mt-3">© 2025 NewsPulse. Powered by Newsdata.io API and Gemini API.</p>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
     <script>
         // Theme Toggle
         const themeToggle = document.getElementById('theme-toggle');

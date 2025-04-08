@@ -1,85 +1,65 @@
 from flask import Flask, render_template, request, jsonify
 import requests
+import os
 
 app = Flask(__name__)
 
-# Your World News API key
-NEWS_API_KEY = '9eb06d6dcaee45a2a1f72e7bc1216b12'
+ 
+NEWS_DATA_API_KEY = 'pub_790006bba0b56dd2d4be338d020dd1c976bde'  
 GEMINI_API_KEY = 'AIzaSyBW--z3TNEdeezRKhoY0Cl52BIXP4UsiAk'
 
-def fetch_top_news(country=None, language='en'):
-    """Fetch top news from World News API."""
-    url = 'https://api.worldnewsapi.com/top-news'
+# Category and Country options for the UI
+CATEGORIES = [
+    ('all', 'All'),
+    ('politics', 'Politics'),
+    ('sports', 'Sports'),
+    ('business', 'Business'),
+    ('technology', 'Technology'),
+    ('entertainment', 'Entertainment'),
+    ('science', 'Science'),
+    ('health', 'Health'),
+    ('world', 'World')
+    # Add more categories as needed based on Newsdata.io documentation
+]
+
+COUNTRIES = [
+    ('', 'All'),
+    ('us', 'United States'),
+    ('gb', 'United Kingdom'),
+    ('in', 'India'),
+    ('au', 'Australia'),
+    ('jp', 'Japan'),
+    ('de', 'Germany'),
+    ('fr', 'France'),
+    ('ca', 'Canada')
+    # Add more countries as needed based on Newsdata.io documentation
+]
+
+def fetch_news_data(query=None, country=None, category=None):
+    """Fetch news from Newsdata.io API."""
+    base_url = 'https://newsdata.io/api/1/latest'
     params = {
-        'api-key': NEWS_API_KEY,
+        'apikey': NEWS_DATA_API_KEY,
+        'language': 'en',
+        'q': query if query else None,
+        'country': country if country and country != '' else None,
+        'category': category if category and category != 'all' else None
     }
-    if country:
-        params['source-country'] = country
-    # if language:
-    #     params['language'] = language
+    # Remove None values from params
+    params = {k: v for k, v in params.items() if v is not None}
 
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(base_url, params=params)
         response.raise_for_status()
         data = response.json()
-        if data.get('top_news'):
-            articles = []
-            for item in data['top_news']:
-                if 'news' in item:
-                    articles.extend(item['news'])
-            print(f"Fetched {len(articles)} top news for country: {country}, language: {language}")
-            return articles
+        if data.get('status') == 'success':
+            print(f"Fetched {len(data.get('results', []))} articles with parameters: {params}")
+            return data.get('results', [])
         else:
-            print(f"World News API error (top-news): {data.get('message')} - Full response: {data}")
+            print(f"Newsdata.io API error: {data.get('message')} - Full response: {data}")
             return []
     except requests.RequestException as e:
-        print(f"Error fetching top news: {e} - URL: {url}, Params: {params}")
-        return []
-
-def fetch_news(text=None, country=None, language='en', earliest_publish_date=None, latest_publish_date=None, category=None):
-    """Search and filter news from World News API."""
-    url = 'https://api.worldnewsapi.com/search-news'
-    params = {
-        'api-key': NEWS_API_KEY,
-    }
-
-    # At least one parameter (text or others) is required
-    if text:
-        params['text'] = text
-    elif any([country, language, earliest_publish_date, latest_publish_date, category]):
-        pass # Allow searching with other criteria even without text
-    else:
-        # If no search parameters are provided, fetch top news instead
-        return fetch_top_news()
-
-    if country:
-        params['source-country'] = country
-    if language:
-        params['language'] = language
-    if earliest_publish_date:
-        params['earliest-publish-date'] = earliest_publish_date
-    if latest_publish_date:
-        params['latest-publish-date'] = latest_publish_date
-    if category and category != 'all':
-        params['categories'] = category
-
-    if not params.get('text') and not any(params.get(key) for key in ['source-country', 'language', 'earliest-publish-date', 'latest-publish-date', 'categories']) and request.args:
-        print("Warning: At least one search parameter (text, country, language, date, category) is required for search-news API.")
-        return []
-
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-        if data.get('news'):
-            articles = data['news']
-            print(f"Fetched {len(articles)} articles with parameters: {params}")
-            return articles
-        else:
-            print(f"World News API error (search-news): {data.get('message')} - Full response: {data}")
-            return []
-    except requests.RequestException as e:
-        print(f"Error fetching news: {e} - URL: {url}, Params: {params}")
+        print(f"Error fetching news from Newsdata.io: {e} - URL: {base_url}, Params: {params}")
         return []
 
 def get_gemini_description(title):
@@ -97,7 +77,7 @@ def get_gemini_description(title):
         ],
         "tools": [
             {
-                "google_search": {}
+                "Google Search": {}
             }
         ]
     }
@@ -114,39 +94,25 @@ def get_gemini_description(title):
 
 @app.route('/')
 def index():
-    """Render the homepage with top news or search results."""
-    text = request.args.get('text')
+    """Render the homepage with news based on filters."""
+    query = request.args.get('q')
     country = request.args.get('country')
-    language = request.args.get('language')
-    earliest_date = request.args.get('earliest_date')
-    latest_date = request.args.get('latest_date')
     category = request.args.get('category')
 
     if not request.args:
-        # Load top headlines from all over the world in English by default
-        articles = fetch_top_news()
+        # Load latest headlines from all categories on first load
+        articles = fetch_news_data()
     else:
-        articles = fetch_news(
-            text=text,
-            country=country,
-            language=language,
-            earliest_publish_date=earliest_date,
-            latest_publish_date=latest_date,
-            category=category
-        )
-        if not articles and not text and not any([country, language, earliest_date, latest_date, category]):
-            # Handle the case where fetch_news returned [] because no search params, so fetch top news
-            articles = fetch_top_news()
+        articles = fetch_news_data(query=query, country=country, category=category)
 
     return render_template(
         'index.html',
         articles=articles,
-        text=text,
-        country=country,
-        language=language,
-        earliest_date=earliest_date,
-        latest_date=latest_date,
-        category=category
+        categories=CATEGORIES,
+        countries=COUNTRIES,
+        current_category=category,
+        current_country=country,
+        search_query=query
     )
 
 @app.route('/describe', methods=['POST'])

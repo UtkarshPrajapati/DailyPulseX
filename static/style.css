@@ -207,10 +207,13 @@ body.light-theme .no-articles {
 }
 
 .meta {
+  color: #ffffff;
+  font-size: 0.9em;
+}
+body.light-theme .meta {
   color: #222222;
   font-size: 0.9em;
 }
-
 .btn-describe {
   background: #00ddeb;
   color: rgb(0, 0, 0);
@@ -265,13 +268,13 @@ body.light-theme .footer ul li a, body.light-theme .footer .social-icon, body.li
 
 @keyframes pulse {
   0% {
-    transform: scale(1);
+      transform: scale(1);
   }
   50% {
-    transform: scale(1.2);
+      transform: scale(1.2);
   }
   100% {
-    transform: scale(1);
+      transform: scale(1);
   }
 }
 
