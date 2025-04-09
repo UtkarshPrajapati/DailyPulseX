@@ -1,53 +1,79 @@
-# DailyPulseX: AI News Aggregator
+# DailyPulseX News Application
 
-DailyPulseX is an AI-driven news aggregator that curates and summarizes the latest news from over 8 countries. Built using Flask and JavaScript, this project leverages the power of the Newsdata.io API and Gemini LLM to provide users with real-time news search and content summarization—reducing reading time by up to 40%.
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Demo](#demo)
-- [Installation & Setup](#installation--setup)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Future Improvements](#future-improvements)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Overview
-
-In a world overflowing with information, DailyPulseX aims to simplify news consumption. By integrating AI-powered summarization with a smooth and responsive interface, the application helps users quickly grasp important news items without getting overwhelmed by lengthy articles.
-
-### Key Highlights:
-- **Real-Time Search:** Find the latest news stories as they happen.
-- **Global Coverage:** Aggregates news from over 8 countries.
-- **AI Summaries:** Uses Gemini LLM to create concise summaries that capture the essence of each article.
-- **User-Friendly Interface:** Clean and responsive design for an optimal reading experience.
+A modern and responsive news aggregator application powered by Flask, Newsdata.io API, and Google's Gemini AI.
 
 ## Features
 
-- **Dynamic News Aggregation:** Pulls news data from multiple sources via the [Newsdata.io API](https://newsdata.io).
-- **AI-Powered Summarization:** Implements Gemini LLM to automatically generate article summaries.
-- **Country-Wise Categorization:** Browse news categorized by country or topic.
-- **Real-Time Updates:** Ensures the news feed is always current.
-- **Responsive Design:** Optimized for both desktop and mobile viewing.
+- 📰 Real-time news updates from various sources
+- 🔍 Search for news articles by keyword
+- 🌏 Filter news by country and category
+- 🤖 AI-powered article descriptions using Google's Gemini
+- 🌓 Dark/Light theme toggle
+- 📱 Responsive design for all devices
+- 🚀 Fast loading with API caching
+- 🛡️ Rate limiting for API protection
 
-## Technologies Used
+## Installation
 
-- **Backend:** Python, Flask
-- **Frontend:** JavaScript, HTML, CSS
-- **APIs:** Newsdata.io API for news content
-- **AI Integration:** Gemini LLM for generating summaries
-- **Others:** Git for version control, and optional deployment tools for hosting
-
- 
-
-## Installation & Setup
-
-Follow these steps to set up DailyPulseX locally:
-
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/mukesh0902/DailyPulseX.git
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/DailyPulseX.git
    cd DailyPulseX
+   ```
+
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Create a `.env` file based on the `.env.example` and add your API keys:
+   ```
+   cp .env.example .env
+   # Edit .env with your API keys
+   ```
+
+5. Run the application:
+   ```
+   python app.py
+   ```
+
+6. Navigate to `http://localhost:5000` in your browser.
+
+## Environment Variables
+
+- `NEWS_DATA_API_KEY`: Your API key from [Newsdata.io](https://newsdata.io)
+- `GEMINI_API_KEY`: Your API key from [Google AI Studio](https://ai.google.dev/)
+- `ADMIN_KEY`: A secret key for admin functions like cache clearing
+- `FLASK_ENV`: Set to `development` for debug mode, `production` for production
+- `PORT`: The port to run the application on (default: 5000)
+
+## API Endpoints
+
+- `/`: Main page with news articles
+- `/describe`: POST endpoint to get AI-generated descriptions
+- `/clear-cache`: POST endpoint to clear the news cache (requires admin key)
+
+## Development
+
+To contribute to this project:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- News data provided by [Newsdata.io](https://newsdata.io)
+- AI descriptions powered by [Google Gemini](https://ai.google.dev/)
+- Frontend built with [Bootstrap](https://getbootstrap.com/) 
